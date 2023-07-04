@@ -1,4 +1,4 @@
-#Projeto de Estudos
+# Projeto de Estudos
 
 Este projeto foi criado com o objetivo de estudar e compreender o funcionamento de uma aplicação com Ruby on Rails.
 
