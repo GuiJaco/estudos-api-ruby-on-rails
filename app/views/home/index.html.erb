@@ -1,0 +1,156 @@
+<h1>API Estados aula</h1>
+
+<a href="http://127.0.0.1:3000/estados.json">Estados</a><br>
+<a href="http://127.0.0.1:3000/cidades.json">Cidades</a><br>
+<a href="http://127.0.0.1:3000/cidades.json?uf=sp">Cidades SP</a><br>
+
+<div style="margin-top: 30px">
+  <h5>Estados</h5>
+  <select onChange="loadCidades(this.value)"id="estados">
+    <option>Selecione</option>
+  </select>
+</div>
+
+<div style="margin-top: 30px">
+  <h5>Cidades</h5>
+  <select id="cidades">
+    <option>Selecione</option>
+  </select>
+</div>
+
+<h1>Lista de Carros</h1>
+<fieldset id="formCars">
+    <legend>Carro:</legend>
+    Nome: <input type="text" id="nome"><br>
+    Marca: <input type="text" id="marca"><br>
+    Modelo: <input type="text" id="modelo"><br>
+    Ano: <input type="text" id="ano"><br>
+    <button onClick="SaveForm()">Submit</button>
+  </fieldset>
+<br>
+
+<table class="table" id="tableCars">
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Marca</th>
+      <th>Modelo</th>
+      <th>Ano</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+    </tr>
+  </tbody>
+</table>
+
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script type="text/javascript" >
+  var loadEstados = function(){
+    $.ajax({
+      url: "http://127.0.0.1:3000/estados.json",
+      context: document.body
+    }).done(function(dados) {
+      $("#estados").html("<option>Selecione</option>")
+      $(dados).each(function(){
+        $("#estados").append("<option value='" + this.uf + "'>" + this.nome + "</option>")
+      });
+    });
+  }
+
+  var loadCidades = function(uf){
+    $.ajax({
+      url: "http://127.0.0.1:3000/cidades.json?uf="+ uf,
+      context: document.body
+    }).done(function(dados) {
+
+      $("#cidades").html("<option>Selecione</option>")
+      $(dados).each(function(){
+        $("#cidades").append("<option>" + this.nome + "</option>")
+      });
+    });
+  }
+
+  loadEstados();
+
+  var loadCars = function(){
+    $("#tableCars tbody").html("");
+    $.ajax({
+      url: "http://127.0.0.1:3000/carros.json",
+      context: document.body
+    }).done(function(cars) {
+      $(cars).each(function(){
+        $("#tableCars tbody").append("<tr data-id='"+ this.id +"'><td ondblclick='changeLine(this)' data-nome='nome'>" + this.nome +"</td><td ondblclick='changeLine(this)' data-nome='marca'>" + this.marca + "</td><td ondblclick='changeLine(this)' data-nome='modelo'>" + this.modelo + "</td><td ondblclick='changeLine(this)' data-nome='ano'>" + this.ano + "</td><td data-nome='apagar'><a href=\"javascript:apagar(\' " + this.id + " \')\">Apagar</a></td></tr>")
+      });
+    });
+  }
+
+  loadCars();
+
+  var changeLine = function(self){
+    $(self).each(function(){
+      var conteudo = $(this).text();
+      if($(this).data("nome") != "apagar"){
+        $(this).html("<input type='text' onblur='save(this)' name='"+ $(this).data("nome") +"' value='"+ conteudo +"' >");
+      }
+    });
+  }
+
+  var save = function(self){
+    var carroId = $(self).parents("tr").data("id")
+    var campo = $(self).attr("name")
+
+    var carro = {}
+    carro[campo] = $(self).val()
+
+    $.ajax({
+      type: 'PUT',
+      url: "http://127.0.0.1:3000/carros/"+ carroId +".json", 
+      data: {
+        carro: carro
+      }
+    }).done(function(cars) {
+      $(self).parents("td").html($(self).val())
+      })
+      .fail(function() {
+        alert("Erro ao atualizar campo");
+      });
+  }
+
+  var SaveForm = function(){
+    var dados = {
+      carro: {
+        nome: $("#nome").val(),
+        marca: $("#marca").val(),
+        modelo: $("#modelo").val(),
+        ano: $("#ano").val()
+    }
+  };
+  $.post("http://127.0.0.1:3000/carros.json", dados)
+    .done(function(cars) {
+      $("#nome").val("");
+      $("#marca").val("");
+      $("#modelo").val("");
+      $("#ano").val("");
+      loadCars();
+    })
+    .fail(function() {
+      alert("Erro ao cadastrar");
+    });
+  }
+
+  var apagar = function(carroId){
+    $.ajax({
+      type: 'DELETE',
+      url: "http://127.0.0.1:3000/carros/"+ carroId +".json", 
+    }).done(function(cars) {
+        loadCars();
+      })
+      .fail(function() {
+        alert("Erro ao deletar");
+      });
+  }
+</script>
+
